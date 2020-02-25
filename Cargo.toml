@@ -12,17 +12,21 @@ edition = "2018"
 
 [lib]
 
+[[example]]
+name = "demo"
+path = "examples/demo.rs"
+
 [dependencies]
 jsparagus-ast = { path = "crates/ast" }
-jsparagus-driver = { path = "crates/driver", optional = true }
 jsparagus-emitter = { path = "crates/emitter" }
 jsparagus-generated-parser = { path = "crates/generated_parser" }
 jsparagus-parser = { path = "crates/parser" }
-jsparagus-interpreter = { path = "crates/interpreter", optional = true  }
+jsparagus-interpreter = { path = "crates/interpreter" }
 
-[features]
-default = []
-full = ["jsparagus-driver", "jsparagus-interpreter"]
+[dev-dependencies]
+bumpalo = "2.6.0"
+rustyline = "6.0.0"
+rustyline-derive = "0.3.0"
 
 [profile.release]
 debug = true  # enable debug symbols in release builds

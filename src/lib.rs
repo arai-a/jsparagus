@@ -12,3 +12,8 @@ pub mod parser {
     extern crate jsparagus_parser;
     pub use self::jsparagus_parser::*;
 }
+
+pub mod interpreter {
+    extern crate jsparagus_interpreter;
+    pub use self::jsparagus_interpreter::*;
+}

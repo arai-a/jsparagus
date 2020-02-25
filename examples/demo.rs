@@ -1,19 +1,17 @@
 //! Functions to exercise the parser from the command line.
 
 use std::ffi::OsStr;
+use std::env;
 use std::fs;
 use std::io;
 use std::io::prelude::*; // flush() at least
 use std::path::Path;
 
-extern crate jsparagus_ast as ast;
-extern crate jsparagus_emitter as emitter;
-extern crate jsparagus_interpreter as interpreter;
-extern crate jsparagus_parser as parser;
+extern crate jsparagus;
 
-use ast::types::{Program, Script};
+use jsparagus::ast::types::{Program, Script};
 use bumpalo::Bump;
-use parser::{is_partial_script, parse_script, ParseOptions};
+use jsparagus::parser::{is_partial_script, parse_script, ParseOptions};
 
 use rustyline::error::ReadlineError;
 use rustyline::validate::{ValidationContext, ValidationResult, Validator};
@@ -21,7 +19,7 @@ use rustyline::Editor;
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
 
 #[derive(Clone, Debug, Default)]
-pub struct DemoStats {
+struct DemoStats {
     files_attempted: usize,
     files_parsed: usize,
 
@@ -30,11 +28,11 @@ pub struct DemoStats {
 }
 
 impl DemoStats {
-    pub fn new() -> DemoStats {
+    fn new() -> DemoStats {
         DemoStats::default()
     }
 
-    pub fn new_single(size_bytes: u64, success: bool) -> DemoStats {
+    fn new_single(size_bytes: u64, success: bool) -> DemoStats {
         DemoStats {
             files_attempted: 1,
             files_parsed: if success { 1 } else { 0 },
@@ -42,7 +40,7 @@ impl DemoStats {
         }
     }
 
-    pub fn add(&mut self, other: &DemoStats) {
+    fn add(&mut self, other: &DemoStats) {
         self.files_attempted += other.files_attempted;
         self.files_parsed += other.files_parsed;
         self.total_bytes += other.total_bytes;
@@ -100,7 +98,7 @@ fn parse_dir(path: &Path) -> io::Result<DemoStats> {
 ///
 /// Returns an Err only if reading a file or directory fails;
 /// parse errors are simply printed to stdout.
-pub fn parse_file_or_dir(filename: &impl AsRef<OsStr>) -> io::Result<DemoStats> {
+fn parse_file_or_dir(filename: &impl AsRef<OsStr>) -> io::Result<DemoStats> {
     let path = Path::new(filename);
     let metadata = path.metadata()?;
     if metadata.is_dir() {
@@ -116,16 +114,16 @@ pub fn parse_file_or_dir(filename: &impl AsRef<OsStr>) -> io::Result<DemoStats> 
 fn handle_script<'alloc>(script: Script<'alloc>) {
     println!("{:#?}", script);
     let mut program = Program::Script(script);
-    let options = emitter::EmitOptions::new();
-    match emitter::emit(&mut program, &options) {
+    let options = jsparagus::emitter::EmitOptions::new();
+    match jsparagus::emitter::emit(&mut program, &options) {
         Err(err) => {
             eprintln!("error: {}", err);
         }
         Ok(emit_result) => {
             println!("\n{:#?}", emit_result);
-            println!("\n{}", emitter::dis(&emit_result.bytecode));
+            println!("\n{}", jsparagus::emitter::dis(&emit_result.bytecode));
 
-            let eval_result = interpreter::evaluate(&emit_result);
+            let eval_result = jsparagus::interpreter::evaluate(&emit_result);
             println!("{:?}", eval_result);
         }
     }
@@ -146,7 +144,7 @@ impl Validator for InputValidator {
     }
 }
 
-pub fn read_print_loop() {
+fn read_print_loop() {
     let h = InputValidator {};
     let mut rl = Editor::new();
     rl.set_helper(Some(h));
@@ -171,5 +169,29 @@ pub fn read_print_loop() {
                 handle_script(script.unbox());
             }
         }
+    }
+}
+
+// jemalloc is temporarily disabled due to a known upstream bug (macOS crashes
+// in release builds): <https://github.com/gnzlbg/jemallocator/issues/136>
+//
+// use jemallocator::Jemalloc;
+//
+// #[global_allocator]
+// static ALLOC: Jemalloc = Jemalloc;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    match args.len() {
+        1 => read_print_loop(),
+        2 => match parse_file_or_dir(&args[1]) {
+            Ok(stats) => {
+                println!("{:#?}", stats);
+            }
+            Err(err) => {
+                eprintln!("{}", err);
+            }
+        },
+        _ => eprintln!("usage: parser [FILE/DIR]"),
     }
 }

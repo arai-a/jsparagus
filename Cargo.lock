@@ -125,12 +125,14 @@ checksum = "b8b7a7c0c47db5545ed3fef7468ee7bb5b74691498139e4b3f6a20685dc6dd8e"
 name = "jsparagus"
 version = "0.1.0"
 dependencies = [
+ "bumpalo",
  "jsparagus-ast",
- "jsparagus-driver",
  "jsparagus-emitter",
  "jsparagus-generated-parser",
  "jsparagus-interpreter",
  "jsparagus-parser",
+ "rustyline",
+ "rustyline-derive",
 ]
 
 [[package]]
@@ -140,19 +142,6 @@ dependencies = [
  "bumpalo",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "jsparagus-driver"
-version = "0.1.0"
-dependencies = [
- "bumpalo",
- "jsparagus-ast",
- "jsparagus-emitter",
- "jsparagus-interpreter",
- "jsparagus-parser",
- "rustyline",
- "rustyline-derive",
 ]
 
 [[package]]
