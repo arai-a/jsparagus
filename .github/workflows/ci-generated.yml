@@ -36,6 +36,7 @@ jobs:
         ## OS independant replace
         #sed -i.bak '/*_generated.rs/d' .gitignore && rm .gitignore.bak
         date > foo
+        date > foo2
     - name: Commit files
       run: |
         git add .
