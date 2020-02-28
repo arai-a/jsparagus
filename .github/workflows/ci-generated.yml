@@ -30,7 +30,7 @@ jobs:
           git checkout -b ci_generated/master origin/ci_generated/master
           git revert HEAD
           MASTER_REV=$(git log -1 master --pretty=%H)
-          git merge master -m 'Merge master ${MASTER_REV}'
+          git merge master -m "Merge master ${MASTER_REV}"
         else
           git checkout -b ci_generated/master
         fi
