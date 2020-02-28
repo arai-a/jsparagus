@@ -23,7 +23,7 @@ jobs:
         git ls-remote origin
         if git ls-remote origin | grep refs/ci_generated/master; then
           git fetch origin +refs/ci_generated/master:refs/remotes/origin/ci_generated/master
-          git checkout -b ci_generated/master origin/refs/ci_generated/master
+          git checkout -b ci_generated/master origin/ci_generated/master
           git revert HEAD
           MASTER_REV=$(git log -1 master --pretty=%H)
           git merge master -m 'Merge master ${MASTER_REV}'
