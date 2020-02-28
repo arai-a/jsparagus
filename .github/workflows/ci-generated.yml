@@ -18,20 +18,33 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: "3.7"
+    - name: Merge previous head and master
+      run: |
+        git ls-remote origin
+        if git ls-remote origin | grep refs/ci_generated/master; then
+          git fetch origin +refs/ci_generated/master:refs/remotes/origin/ci_generated/master
+          git checkout -b ci_generated/master origin/refs/ci_generated/master
+          git revert HEAD
+          MASTER_REV=$(git log -1 master --pretty=%H)
+          git merge master -m 'Merge master ${MASTER_REV}'
+        else
+          git checkout -b ci_generated/master
+        fi
     - name: Generate Files
       run: |
-        make init-venv && make all
-        # OS independant replace
-        sed -i.bak '/*_generated.rs/d' .gitignore && rm .gitignore.bak
+        #make init-venv && make all
+        ## OS independant replace
+        #sed -i.bak '/*_generated.rs/d' .gitignore && rm .gitignore.bak
+        date > foo
     - name: Commit files
       run: |
         git add .
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git commit -m "Add Generated Files" -a
+        MASTER_REV=$(git log -1 master --pretty=%H)
+        git commit -m "Add Generated Files for ${MASTER_REV}" -a
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ci_generated
-        force: true
+        branch: refs/ci_generated/master
