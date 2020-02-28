@@ -7,3 +7,4 @@ jsparagus/emit/collect_handler_info/info.json
 jsparagus/emit/collect_handler_info/target
 *.jsparagus_dump
 *.pyc
+*_generated.rs
