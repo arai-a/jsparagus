@@ -26,9 +26,14 @@ jobs:
       run: |
         git ls-remote origin
         if git ls-remote origin | grep refs/ci_generated/master; then
+          # Map the remote ref to branch.
           git fetch origin +refs/ci_generated/master:refs/remotes/origin/ci_generated/master
           git checkout -b ci_generated/master origin/ci_generated/master
+
+          # Revert the previous generated files, so that the merge is clean.
           git revert HEAD
+
+          # Merge master.
           MASTER_REV=$(git log -1 master --pretty=%H)
           git merge master -m "Merge master ${MASTER_REV}"
         else
@@ -36,11 +41,9 @@ jobs:
         fi
     - name: Generate Files
       run: |
-        #make init-venv && make all
-        ## OS independant replace
-        #sed -i.bak '/*_generated.rs/d' .gitignore && rm .gitignore.bak
-        date > foo
-        date > foo2
+        make init-venv && make all
+        # OS independant replace
+        sed -i.bak '/*_generated.rs/d' .gitignore && rm .gitignore.bak
     - name: Commit files
       run: |
         git add .
