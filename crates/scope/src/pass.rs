@@ -9,8 +9,10 @@
 
 use crate::builder::ScopeDataMapBuilder;
 use crate::data::ScopeDataMap;
+use ast::arena;
 use ast::associated_data::AssociatedData;
 use ast::{types::*, visit::Pass};
+use std::ops::Deref;
 
 /// The result of scope analysis.
 pub struct ScopeDataMapAndFunctionMap<'alloc> {
@@ -142,6 +144,34 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
         self.builder.after_function_parameters();
     }
 
+    /// Getter doesn't have FormalParameters.
+    /// Call builder methods just before body.
+    fn visit_getter(&mut self, ast: &'alloc Getter<'alloc>) {
+        self.enter_getter(ast);
+        self.visit_property_name(&ast.property_name);
+
+        self.builder.before_function_parameters(ast);
+        self.builder.after_function_parameters();
+
+        self.visit_function_body(&ast.body);
+        self.leave_getter(ast);
+    }
+
+    /// Setter doesn't have FormalParameters, but single Parameter.
+    /// Call builder methods around it.
+    fn visit_setter(&mut self, ast: &'alloc Setter<'alloc>) {
+        self.enter_setter(ast);
+        self.visit_property_name(&ast.property_name);
+
+        self.builder.before_function_parameters(ast);
+        self.builder.before_parameter();
+        self.visit_parameter(&ast.param);
+        self.builder.after_function_parameters();
+
+        self.visit_function_body(&ast.body);
+        self.leave_setter(ast);
+    }
+
     fn leave_binding_with_default(&mut self, _ast: &'alloc BindingWithDefault<'alloc>) {
         self.builder.after_initializer();
     }
@@ -162,6 +192,22 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
     }
 
     fn leave_function_body(&mut self, _ast: &'alloc FunctionBody<'alloc>) {
+        self.builder.after_function_body();
+    }
+
+    /// Arrow function with expression body.
+    /// Use the expression as the node for function body.
+    fn enter_enum_arrow_expression_body_variant_expression(
+        &mut self,
+        ast: &'alloc arena::Box<'alloc, Expression<'alloc>>,
+    ) {
+        self.builder.before_function_body(ast.deref());
+    }
+
+    fn leave_enum_arrow_expression_body_variant_expression(
+        &mut self,
+        _ast: &'alloc arena::Box<'alloc, Expression<'alloc>>,
+    ) {
         self.builder.after_function_body();
     }
 }
