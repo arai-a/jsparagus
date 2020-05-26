@@ -490,7 +490,7 @@ def generate_types(out_f, types):
             """))
 
         out_f.write(dedent(f"""\
-        #[derive(Debug)]
+        #[derive(Debug, Clone, Copy)]
         pub enum {ty} {{
         {''.join(variants)}}}
 
