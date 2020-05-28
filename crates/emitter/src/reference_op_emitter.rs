@@ -120,11 +120,11 @@ fn check_env_temporary_dead_zone(
     //                  [stack] VAL?
 
     if is_on_stack == ValueIsOnStack::No {
-        emitter.emit.get_aliased_var(hops.into(), slot.into());
+        emitter.emit.get_aliased_var(hops, slot);
         //              [stack] VAL
     }
 
-    emitter.emit.check_aliased_lexical(hops.into(), slot.into());
+    emitter.emit.check_aliased_lexical(hops, slot);
     //                  [stack] VAL
 
     if is_on_stack == ValueIsOnStack::No {
@@ -178,7 +178,7 @@ impl GetNameEmitter {
                 }
             }
             NameLocation::EnvironmentCoord(hops, slot, kind) => {
-                emitter.emit.get_aliased_var(hops.into(), slot.into());
+                emitter.emit.get_aliased_var(hops, slot);
 
                 if kind == BindingKind::Let || kind == BindingKind::Const {
                     check_env_temporary_dead_zone(emitter, hops, slot, ValueIsOnStack::Yes);
@@ -366,7 +366,7 @@ impl NameReferenceEmitter {
                 //      [stack] CALLEE THIS
             }
             NameLocation::EnvironmentCoord(hops, slot, kind) => {
-                emitter.emit.get_aliased_var(hops.into(), slot.into());
+                emitter.emit.get_aliased_var(hops, slot);
                 //      [stack] CALLEE
 
                 if kind == BindingKind::Let || kind == BindingKind::Const {
@@ -722,13 +722,13 @@ where
                 check_env_temporary_dead_zone(emitter, hops, slot, ValueIsOnStack::No);
                 //      [stack] VAL
 
-                emitter.emit.set_aliased_var(hops.into(), slot.into());
+                emitter.emit.set_aliased_var(hops, slot);
                 //      [stack] VAL
             }
             AssignmentReferenceKind::EnvironmentCoordNonLexical(hops, slot) => {
                 //      [stack] VAL
 
-                emitter.emit.set_aliased_var(hops.into(), slot.into());
+                emitter.emit.set_aliased_var(hops, slot);
                 //      [stack] VAL
             }
             AssignmentReferenceKind::Prop(key_index) => {
@@ -794,7 +794,7 @@ where
             DeclarationReferenceKind::EnvironmentCoord(hops, slot) => {
                 //      [stack] VAL
 
-                emitter.emit.init_aliased_lexical(hops.into(), slot.into());
+                emitter.emit.init_aliased_lexical(hops, slot);
                 //      [stack] VAL
             }
         }

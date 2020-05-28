@@ -13,6 +13,7 @@ use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fmt;
 use stencil::bytecode_offset::{BytecodeOffset, BytecodeOffsetDiff};
+use stencil::env_coord::{EnvironmentHops, EnvironmentSlot};
 use stencil::frame_slot::FrameSlot;
 use stencil::function::FunctionStencilIndex;
 use stencil::gcthings::{GCThingIndex, GCThingList};
@@ -216,6 +217,18 @@ impl InstructionWriter {
 
     fn write_g_c_thing_index(&mut self, value: GCThingIndex) {
         self.write_u32(usize::from(value) as u32);
+    }
+
+    fn write_frame_slot(&mut self, localno: FrameSlot) {
+        self.write_u24(localno.into());
+    }
+
+    fn write_environment_hops(&mut self, hops: EnvironmentHops) {
+        self.write_u8(hops.into());
+    }
+
+    fn write_environment_slot(&mut self, slot: EnvironmentSlot) {
+        self.write_u24(slot.into());
     }
 
     fn write_offset(&mut self, offset: i32) {
@@ -1073,9 +1086,9 @@ impl InstructionWriter {
         self.emit_op(Opcode::Uninitialized);
     }
 
-    pub fn init_lexical(&mut self, localno: u24) {
+    pub fn init_lexical(&mut self, localno: FrameSlot) {
         self.emit_op(Opcode::InitLexical);
-        self.write_u24(localno);
+        self.write_frame_slot(localno);
     }
 
     pub fn init_g_lexical(&mut self, name_index: GCThingIndex) {
@@ -1083,21 +1096,21 @@ impl InstructionWriter {
         self.write_g_c_thing_index(name_index);
     }
 
-    pub fn init_aliased_lexical(&mut self, hops: u8, slot: u24) {
+    pub fn init_aliased_lexical(&mut self, hops: EnvironmentHops, slot: EnvironmentSlot) {
         self.emit_op(Opcode::InitAliasedLexical);
-        self.write_u8(hops);
-        self.write_u24(slot);
+        self.write_environment_hops(hops);
+        self.write_environment_slot(slot);
     }
 
-    pub fn check_lexical(&mut self, localno: u24) {
+    pub fn check_lexical(&mut self, localno: FrameSlot) {
         self.emit_op(Opcode::CheckLexical);
-        self.write_u24(localno);
+        self.write_frame_slot(localno);
     }
 
-    pub fn check_aliased_lexical(&mut self, hops: u8, slot: u24) {
+    pub fn check_aliased_lexical(&mut self, hops: EnvironmentHops, slot: EnvironmentSlot) {
         self.emit_op(Opcode::CheckAliasedLexical);
-        self.write_u8(hops);
-        self.write_u24(slot);
+        self.write_environment_hops(hops);
+        self.write_environment_slot(slot);
     }
 
     pub fn check_this(&mut self) {
@@ -1129,15 +1142,15 @@ impl InstructionWriter {
         self.write_u16(argno);
     }
 
-    pub fn get_local(&mut self, localno: u24) {
+    pub fn get_local(&mut self, localno: FrameSlot) {
         self.emit_op(Opcode::GetLocal);
-        self.write_u24(localno);
+        self.write_frame_slot(localno);
     }
 
-    pub fn get_aliased_var(&mut self, hops: u8, slot: u24) {
+    pub fn get_aliased_var(&mut self, hops: EnvironmentHops, slot: EnvironmentSlot) {
         self.emit_op(Opcode::GetAliasedVar);
-        self.write_u8(hops);
-        self.write_u24(slot);
+        self.write_environment_hops(hops);
+        self.write_environment_slot(slot);
     }
 
     pub fn get_import(&mut self, name_index: GCThingIndex) {
@@ -1189,15 +1202,15 @@ impl InstructionWriter {
         self.write_u16(argno);
     }
 
-    pub fn set_local(&mut self, localno: u24) {
+    pub fn set_local(&mut self, localno: FrameSlot) {
         self.emit_op(Opcode::SetLocal);
-        self.write_u24(localno);
+        self.write_frame_slot(localno);
     }
 
-    pub fn set_aliased_var(&mut self, hops: u8, slot: u24) {
+    pub fn set_aliased_var(&mut self, hops: EnvironmentHops, slot: EnvironmentSlot) {
         self.emit_op(Opcode::SetAliasedVar);
-        self.write_u8(hops);
-        self.write_u24(slot);
+        self.write_environment_hops(hops);
+        self.write_environment_slot(slot);
     }
 
     pub fn set_intrinsic(&mut self, name_index: GCThingIndex) {

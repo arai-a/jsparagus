@@ -556,6 +556,14 @@ def generate_emit_methods(out_f, opcodes, types):
         elif 'JOF_JUMP' in opcode.format_:
             assert params[0][0] == 'i32'
             params[0] = ('BytecodeOffsetDiff', params[0][1])
+        elif 'JOF_ENVCOORD' in opcode.format_:
+            assert params[0][0] == 'u8'
+            assert params[1][0] == 'u24'
+            params[0] = ('EnvironmentHops', params[0][1])
+            params[1] = ('EnvironmentSlot', params[1][1])
+        elif 'JOF_LOCAL' in opcode.format_:
+            assert params[0][0] == 'u24'
+            params[0] = ('FrameSlot', params[0][1])
         else:
             assert int(opcode.nuses) != -1
 
