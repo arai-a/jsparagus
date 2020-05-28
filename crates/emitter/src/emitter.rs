@@ -1395,6 +1395,7 @@ impl InstructionWriter {
         scope_index: ScopeIndex,
         parent_scope_note_index: Option<ScopeNoteIndex>,
         next_frame_slot: FrameSlot,
+        needs_environment_object: bool,
     ) -> ScopeNoteIndex {
         self.update_max_frame_slots(next_frame_slot);
 
@@ -1403,11 +1404,20 @@ impl InstructionWriter {
         let note_index =
             self.scope_notes
                 .enter_scope(gcthing_index, offset, parent_scope_note_index);
+
+        if needs_environment_object {
+            self.push_lexical_env(gcthing_index);
+        }
+
         note_index
     }
 
-    pub fn leave_lexical_scope(&mut self, index: ScopeNoteIndex) {
-        self.debug_leave_lexical_env();
+    pub fn leave_lexical_scope(&mut self, index: ScopeNoteIndex, needs_environment_object: bool) {
+        if needs_environment_object {
+            self.pop_lexical_env();
+        } else {
+            self.debug_leave_lexical_env();
+        }
         let offset = self.bytecode_offset();
         self.scope_notes.leave_scope(index, offset);
     }
