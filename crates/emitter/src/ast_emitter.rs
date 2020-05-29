@@ -8,7 +8,9 @@ use crate::compilation_info::CompilationInfo;
 use crate::emitter::{EmitError, EmitOptions, InstructionWriter};
 use crate::emitter_scope::{EmitterScopeStack, NameLocation};
 use crate::expression_emitter::*;
-use crate::function_declaration_emitter::{FunctionDeclarationEmitter, LazyFunctionEmitter};
+use crate::function_declaration_emitter::{
+    LazyFunctionEmitter, LexicalFunctionDeclarationEmitter, TopLevelFunctionDeclarationEmitter,
+};
 use crate::object_emitter::*;
 use crate::reference_op_emitter::{
     AssignmentEmitter, CallEmitter, DeclarationEmitter, ElemReferenceEmitter, GetElemEmitter,
@@ -120,11 +122,33 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             .expect("FunctionStencil should be created");
         let fun_index = LazyFunctionEmitter { stencil_index }.emit(self);
 
-        FunctionDeclarationEmitter { fun: fun_index }.emit(self);
+        TopLevelFunctionDeclarationEmitter { fun: fun_index }.emit(self);
 
-        Err(EmitError::NotImplemented(
-            "TODO: closed over bindings for function",
-        ))
+        Ok(())
+    }
+
+    fn emit_lexical_function_declaration(&mut self, fun: &Function) -> Result<(), EmitError> {
+        let stencil_index = *self
+            .compilation_info
+            .function_stencil_indices
+            .get(fun)
+            .expect("FunctionStencil should be created");
+        let fun_index = LazyFunctionEmitter { stencil_index }.emit(self);
+
+        let name = self
+            .compilation_info
+            .functions
+            .get(stencil_index)
+            .name()
+            .expect("Function declaration should have name");
+
+        LexicalFunctionDeclarationEmitter {
+            fun: fun_index,
+            name,
+        }
+        .emit(self)?;
+
+        Err(EmitError::NotImplemented("TODO: Annex B function"))
         //Ok(())
     }
 
@@ -257,9 +281,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             }
             Statement::FunctionDeclaration(fun) => {
                 if !self.is_top_level_function(fun) {
-                    return Err(EmitError::NotImplemented(
-                        "TODO: non-top-level FunctionDeclaration",
-                    ));
+                    self.emit_lexical_function_declaration(fun)?;
                 }
             }
         };
