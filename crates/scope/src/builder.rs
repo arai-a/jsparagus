@@ -2081,8 +2081,15 @@ impl FunctionStencilBuilder {
         self.current_mut().set_to_string_starts(params_start);
     }
 
+    fn on_non_rest_parameter(&mut self) {
+        let fun = self.current_mut();
+        fun.add_nargs();
+    }
+
     fn on_rest_parameter(&mut self) {
-        self.current_mut().set_has_rest();
+        let fun = self.current_mut();
+        fun.add_nargs();
+        fun.set_has_rest();
     }
 
     fn add_closed_over_bindings(
@@ -2509,6 +2516,8 @@ impl ScopeDataMapBuilder {
     pub fn before_parameter(&mut self) {
         let builder = self.builder_stack.get_function_parameters();
         builder.before_parameter();
+
+        self.function_stencil_builder.on_non_rest_parameter();
     }
 
     pub fn before_binding_pattern(&mut self) {
