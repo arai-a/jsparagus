@@ -18,9 +18,9 @@ fn try_evaluate(source: &str) -> Result<JSValue, EvalError> {
         .expect("Failed to parse");
     let emit_options = EmitOptions::new();
     let script = parse_result.unbox();
-    let program = arena::alloc(alloc, ast::types::Program::Script(script)).unbox();
+    let program = arena::alloc(alloc, ast::types::Program::Script(script));
     let result = emit(
-        &program,
+        &*program,
         &emit_options,
         atoms.replace(SourceAtomSet::new_uninitialized()),
         slices.replace(SourceSliceList::new()),
