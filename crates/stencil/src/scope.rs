@@ -343,6 +343,14 @@ impl LexicalScopeData {
     pub fn iter<'a>(&'a self) -> LexicalBindingIter<'a> {
         LexicalBindingIter::new(self)
     }
+
+    pub fn mark_annex_b_function(&mut self, binding_index: usize) {
+        // Lexical function becomes mutable binding.
+        debug_assert!(binding_index < self.const_start);
+
+        self.const_start -= 1;
+        self.base.bindings.remove(binding_index);
+    }
 }
 
 /// Corresponds to the iteration part of js::BindingIter
@@ -526,7 +534,7 @@ impl ScopeDataList {
             .expect("Should be populated")
     }
 
-    fn get_mut(&mut self, index: ScopeIndex) -> &mut ScopeData {
+    pub fn get_mut(&mut self, index: ScopeIndex) -> &mut ScopeData {
         self.scopes[usize::from(index)]
             .as_mut()
             .expect("Should be populated")
@@ -585,6 +593,13 @@ impl ScopeDataMap {
             .get(node)
             .expect("There should be a scope data associated")
             .clone()
+    }
+
+    pub fn get_lexical_at(&self, index: ScopeIndex) -> &LexicalScopeData {
+        match self.scopes.get(index) {
+            ScopeData::Lexical(scope) => scope,
+            _ => panic!("Unexpected scope data for lexical"),
+        }
     }
 
     pub fn get_lexical_at_mut(&mut self, index: ScopeIndex) -> &mut LexicalScopeData {
