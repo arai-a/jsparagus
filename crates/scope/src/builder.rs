@@ -2995,6 +2995,10 @@ impl ScopeDataMapBuilder {
             .base_mut()
             .bindings_accessed_dynamically = true;
     }
+
+    pub fn on_class(&mut self) {
+        self.set_not_implemented("class");
+    }
 }
 
 pub struct ScopeDataMapAndScriptStencilList {
