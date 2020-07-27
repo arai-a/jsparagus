@@ -23,7 +23,7 @@ use crate::compilation_info::CompilationInfo;
 
 use ast::source_atom_set::SourceAtomSet;
 use ast::source_slice_list::SourceSliceList;
-use scope::{ScopePassResult, ScopeBuildError};
+use scope::{ScopeBuildError, ScopePassResult};
 use stencil::result::EmitResult;
 
 pub fn emit<'alloc>(

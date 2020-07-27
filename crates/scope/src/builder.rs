@@ -2981,8 +2981,9 @@ impl ScopeDataMapBuilder {
         self.scope_kind_stack.pop(ScopeKind::CatchParameter);
     }
 
-    #[allow(dead_code)]
     pub fn on_direct_eval(&mut self) {
+        self.set_not_implemented("direct eval (script flags)");
+
         if let Some(parameter_scope_builder) =
             self.builder_stack.maybe_innermost_function_parameters()
         {

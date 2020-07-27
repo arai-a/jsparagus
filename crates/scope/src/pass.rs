@@ -7,7 +7,7 @@
 //! but the goal is to do this analysis as part of the parse phase, even when
 //! no AST is built. So we try to keep AST use separate from the analysis code.
 
-use crate::builder::{ScopeDataMapAndScriptStencilList, ScopeDataMapBuilder, ScopeBuildError};
+use crate::builder::{ScopeBuildError, ScopeDataMapAndScriptStencilList, ScopeDataMapBuilder};
 use crate::data::FunctionDeclarationPropertyMap;
 use ast::arena;
 use ast::associated_data::AssociatedData;
@@ -284,5 +284,19 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
 
     fn leave_catch_clause(&mut self, _ast: &'alloc CatchClause<'alloc>) {
         self.builder.after_catch_clause();
+    }
+
+    fn enter_call_expression(&mut self, ast: &'alloc CallExpression<'alloc>) {
+        match &ast.callee {
+            ExpressionOrSuper::Expression(expr) => match &**expr {
+                Expression::IdentifierExpression(IdentifierExpression { name, .. }) => {
+                    if name.value == CommonSourceAtomSetIndices::eval() {
+                        self.builder.on_direct_eval();
+                    }
+                }
+                _ => {}
+            },
+            _ => {}
+        }
     }
 }
