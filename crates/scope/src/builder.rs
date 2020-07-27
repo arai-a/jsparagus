@@ -292,7 +292,6 @@ enum ScopeKind {
 
     FormalParameter,
 
-    #[allow(dead_code)]
     CatchParameter,
 
     /// LexicallyScopedDeclarations::ExportDeclarationWithAssignmentExpression
@@ -2284,6 +2283,13 @@ impl FunctionScriptStencilBuilder {
     }
 }
 
+/// Scope builder shouldn't raise any error except not-implemented.
+/// This struct should eventually be removed.
+#[derive(Clone, Debug)]
+pub enum ScopeBuildError {
+    NotImplemented(&'static str),
+}
+
 /// Receives method calls telling about a JS script and builds a
 /// `ScopeDataMap`.
 ///
@@ -2309,6 +2315,8 @@ pub struct ScopeDataMapBuilder {
     function_declaration_properties: FunctionDeclarationPropertyMap,
 
     possibly_annex_b_functions: PossiblyAnnexBFunctionList,
+
+    error: Option<ScopeBuildError>,
 }
 
 impl ScopeDataMapBuilder {
@@ -2322,6 +2330,13 @@ impl ScopeDataMapBuilder {
             function_stencil_builder: FunctionScriptStencilBuilder::new(),
             function_declaration_properties: FunctionDeclarationPropertyMap::new(),
             possibly_annex_b_functions: PossiblyAnnexBFunctionList::new(),
+            error: None,
+        }
+    }
+
+    fn set_not_implemented(&mut self, s: &'static str) {
+        if self.error.is_none() {
+            self.error = Some(ScopeBuildError::NotImplemented(s));
         }
     }
 
@@ -2461,7 +2476,7 @@ impl ScopeDataMapBuilder {
         if self.scope_kind_stack.is_empty() {
             // FIXME
             // Do nothing for unsupported case.
-            // Emitter will return NotImplemented anyway.
+            self.set_not_implemented("Unsupported binding identifier");
             return;
         }
 
@@ -2474,6 +2489,11 @@ impl ScopeDataMapBuilder {
                 self.function_stencil_builder.set_function_name(name);
             }
             ScopeKind::FormalParameter => self.builder_stack.innermost().declare_param(name),
+            ScopeKind::CatchParameter => {
+                // Do nothing for now.
+                // Not-implemented is already set before entering catch.
+                // FIXME: Implement try-catch.
+            }
             _ => panic!("Not implemeneted"),
         }
     }
@@ -2496,6 +2516,10 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        if is_generator || is_async {
+            self.set_not_implemented("Generator or async function");
+        }
+
         let fun_index = self.function_stencil_builder.enter(
             fun,
             FunctionSyntaxKind::function_declaration(is_generator, is_async),
@@ -2529,6 +2553,8 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        self.set_not_implemented("Function expression (name analysis)");
+
         let index = self.scopes.allocate();
         let builder = FunctionExpressionScopeBuilder::new(index);
         self.non_global.insert(fun, index);
@@ -2563,6 +2589,8 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        self.set_not_implemented("Method (name calculation)");
+
         self.function_stencil_builder.enter(
             fun,
             FunctionSyntaxKind::method(is_generator, is_async),
@@ -2581,6 +2609,8 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        self.set_not_implemented("Getter (name calculation)");
+
         self.function_stencil_builder.enter(
             fun,
             FunctionSyntaxKind::getter(),
@@ -2607,6 +2637,8 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        self.set_not_implemented("Setter (name calculation)");
+
         self.function_stencil_builder.enter(
             fun,
             FunctionSyntaxKind::setter(),
@@ -2637,6 +2669,8 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        self.set_not_implemented("Arrow function (special name handling)");
+
         self.function_stencil_builder.enter(
             params,
             FunctionSyntaxKind::arrow(is_async),
@@ -2891,6 +2925,16 @@ impl ScopeDataMapBuilder {
             .populate(lexical_scope_index, scope_data_set.lexical);
     }
 
+    pub fn before_catch_clause(&mut self) {
+        self.set_not_implemented("try-catch");
+
+        self.scope_kind_stack.push(ScopeKind::CatchParameter);
+    }
+
+    pub fn after_catch_clause(&mut self) {
+        self.scope_kind_stack.pop(ScopeKind::CatchParameter);
+    }
+
     #[allow(dead_code)]
     pub fn on_direct_eval(&mut self) {
         if let Some(parameter_scope_builder) =
@@ -2911,6 +2955,7 @@ pub struct ScopeDataMapAndScriptStencilList {
     pub function_stencil_indices: AssociatedData<ScriptStencilIndex>,
     pub function_declaration_properties: FunctionDeclarationPropertyMap,
     pub functions: ScriptStencilList,
+    pub error: Option<ScopeBuildError>,
 }
 
 impl From<ScopeDataMapBuilder> for ScopeDataMapAndScriptStencilList {
@@ -2924,6 +2969,7 @@ impl From<ScopeDataMapBuilder> for ScopeDataMapAndScriptStencilList {
             function_stencil_indices: builder.function_stencil_builder.function_stencil_indices,
             function_declaration_properties: builder.function_declaration_properties,
             functions: builder.function_stencil_builder.functions,
+            error: builder.error,
         }
     }
 }
