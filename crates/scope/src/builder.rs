@@ -2859,11 +2859,10 @@ impl ScopeDataMapBuilder {
             }
 
             if try_declare_arguments {
-                let has_defined_arguments = parameter_has_arguments || body_has_defined_arguments;
                 let declare_arguments = if has_extra_body_var {
                     !parameter_has_arguments
                 } else {
-                    has_defined_arguments
+                    !(parameter_has_arguments || body_has_defined_arguments)
                 };
 
                 if declare_arguments {
