@@ -2963,6 +2963,13 @@ impl ScopeDataMapBuilder {
                 if bindings_accessed_dynamically {
                     fun_stencil.set_always_needs_args_obj();
                 }
+
+                if has_used_this {
+                    // FIXME
+                    // IsLikelyConstructorWrapper should be set if
+                    // `.apply()` is used and `return` isn't used.
+                    self.set_not_implemented("IsLikelyConstructorWrapper condition");
+                }
             }
         }
 
