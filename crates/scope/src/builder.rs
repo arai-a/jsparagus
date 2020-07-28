@@ -3015,6 +3015,14 @@ impl ScopeDataMapBuilder {
     pub fn on_class(&mut self) {
         self.set_not_implemented("class");
     }
+
+    pub fn on_with(&mut self) {
+        self.set_not_implemented("with statement");
+    }
+
+    pub fn on_delete(&mut self) {
+        self.set_not_implemented("delete operator");
+    }
 }
 
 pub struct ScopeDataMapAndScriptStencilList {
