@@ -277,12 +277,4 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
     ) {
         self.builder.after_function_body();
     }
-
-    fn enter_catch_clause(&mut self, _ast: &'alloc CatchClause<'alloc>) {
-        self.builder.before_catch_clause();
-    }
-
-    fn leave_catch_clause(&mut self, _ast: &'alloc CatchClause<'alloc>) {
-        self.builder.after_catch_clause();
-    }
 }

@@ -298,6 +298,7 @@ enum ScopeKind {
 
     FormalParameter,
 
+    #[allow(dead_code)]
     CatchParameter,
 
     /// LexicallyScopedDeclarations::ExportDeclarationWithAssignmentExpression
@@ -2525,11 +2526,6 @@ impl ScopeDataMapBuilder {
                 return;
             }
             ScopeKind::FormalParameter => self.builder_stack.innermost().declare_param(name),
-            ScopeKind::CatchParameter => {
-                // FIXME
-                // Do nothing for now.
-                // Not-implemented is already set before entering catch.
-            }
             _ => panic!("Not implemeneted"),
         }
     }
@@ -2969,16 +2965,6 @@ impl ScopeDataMapBuilder {
 
         self.scope_kind_stack
             .pop(ScopeKind::FunctionParametersAndBody);
-    }
-
-    pub fn before_catch_clause(&mut self) {
-        self.set_not_implemented("try-catch");
-
-        self.scope_kind_stack.push(ScopeKind::CatchParameter);
-    }
-
-    pub fn after_catch_clause(&mut self) {
-        self.scope_kind_stack.pop(ScopeKind::CatchParameter);
     }
 
     #[allow(dead_code)]
