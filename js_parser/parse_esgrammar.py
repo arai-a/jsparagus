@@ -364,21 +364,18 @@ class ESGrammarBuilder:
         return ("range", c1, c2)
 
     def la_eq(self, t):
-        return grammar.LookaheadRule(OrderedFrozenSet([t]), True)
+        return grammar.LookaheadRule(OrderedFrozenSet([OrderedFrozenSet([t])]), True)
 
     def la_ne(self, t):
-        return grammar.LookaheadRule(OrderedFrozenSet([t]), False)
+        return grammar.LookaheadRule(OrderedFrozenSet([OrderedFrozenSet([t])]), False)
 
     def la_not_in_nonterminal(self, nt):
-        return grammar.LookaheadRule(OrderedFrozenSet([nt]), False)
+        return grammar.LookaheadRule(OrderedFrozenSet([OrderedFrozenSet([nt])]), False)
 
     def la_not_in_set(self, lookahead_exclusions):
-        if all(len(excl) == 1 for excl in lookahead_exclusions):
-            return grammar.LookaheadRule(
-                OrderedFrozenSet(excl[0] for excl in lookahead_exclusions),
-                False)
-        raise ValueError("unsupported: lookahead > 1 token, {!r}"
-                         .format(lookahead_exclusions))
+        return grammar.LookaheadRule(
+            OrderedFrozenSet(OrderedFrozenSet(excl) for excl in lookahead_exclusions),
+            False)
 
     def chr(self, t):
         assert t[0] == "<" or t[0] == 'U'

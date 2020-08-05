@@ -407,9 +407,9 @@ def seq_start(
             assert isinstance(e, LookaheadRule)
             future = seq_start(grammar, start, seq[i + 1:])
             if e.positive:
-                future &= e.set
+                future &= e.first_token_set()
             else:
-                future -= e.set
+                future -= e.first_token_set()
             return OrderedFrozenSet(future)
     return OrderedFrozenSet(s)
 
@@ -452,9 +452,9 @@ def make_start_set_cache(
             else:
                 assert isinstance(e, LookaheadRule)
                 if e.positive:
-                    s = OrderedFrozenSet(sets[-1] & e.set)
+                    s = OrderedFrozenSet(sets[-1] & e.first_token_set())
                 else:
-                    s = OrderedFrozenSet(sets[-1] - e.set)
+                    s = OrderedFrozenSet(sets[-1] - e.first_token_set())
             assert isinstance(s, OrderedFrozenSet)
             assert s == seq_start(grammar, start, rhs[len(rhs) - len(sets):])
             sets.append(s)

@@ -776,10 +776,10 @@ class Grammar:
         elif isinstance(e, LookaheadRule):
             if len(e.set) == 1:
                 op = "==" if e.positive else "!="
-                s = repr(list(e.set)[0])
+                s = repr(list(list(seq) for seq in list(e.set)[0]))
             else:
                 op = "in" if e.positive else "not in"
-                s = '{' + repr(list(e.set))[1:-1] + '}'
+                s = '{' + repr(list(list(seq) for seq in list(e.set)))[1:-1] + '}'
             return "[lookahead {} {}]".format(op, s)
         elif isinstance(e, End):
             return "<END>"
@@ -1070,48 +1070,19 @@ class LookaheadRule:
     """LookaheadRule(set, pos) imposes a lookahead restriction on whatever follows.
 
     It never consumes any tokens itself. Instead, the right-hand side
-    [LookaheadRule(frozenset(['a', 'b']), False), 'Thing']
-    matches a Thing that does not start with the token `a` or `b`.
+    [LookaheadRule(OrderedFrozenSet([
+      OrderedFrozenSet(['a']),
+      OrderedFrozenSet(['b', 'c'])
+     ]), False),
+     'Thing']
+    matches a Thing that does not start with either the token `a`, or the
+    sequence of tokens `b` + 'c'.
     """
-    set: typing.FrozenSet[str]
+    set: OrderedFrozenSet[OrderedFrozenSet[str]]
     positive: bool
 
-
-# A lookahead restriction really just specifies a set of allowed terminals.
-#
-# -   No lookahead restriction at all is equivalent to a rule specifying all terminals.
-#
-# -   A positive lookahead restriction explicitly lists all allowed tokens.
-#
-# -   A negative lookahead restriction instead specifies the set of all tokens
-#     except a few.
-#
-def lookahead_contains(rule: typing.Optional[LookaheadRule], t: str) -> bool:
-    """True if the given lookahead restriction `rule` allows the terminal `t`."""
-    return (rule is None
-            or (t in rule.set if rule.positive
-                else t not in rule.set))
-
-
-def lookahead_intersect(
-        a: typing.Optional[LookaheadRule],
-        b: typing.Optional[LookaheadRule]
-) -> typing.Optional[LookaheadRule]:
-    """Returns a single rule enforcing both `a` and `b`, allowing only terminals that pass both."""
-    if a is None:
-        return b
-    elif b is None:
-        return a
-    elif a.positive:
-        if b.positive:
-            return LookaheadRule(a.set & b.set, True)
-        else:
-            return LookaheadRule(a.set - b.set, True)
-    else:
-        if b.positive:
-            return LookaheadRule(b.set - a.set, True)
-        else:
-            return LookaheadRule(a.set | b.set, False)
+    def first_token_set(self) -> OrderedFrozenSet[str]:
+        return OrderedFrozenSet([list(seq)[0] for seq in self.set])
 
 
 class NoLineTerminatorHereClass:

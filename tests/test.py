@@ -479,7 +479,7 @@ class GenTestCase(unittest.TestCase):
             lexer.LexicalGrammar('A B + ( )'),
             Grammar({
                 'goal': [
-                    [LookaheadRule(frozenset({'A', 'B'}), True), 'expr'],
+                    [LookaheadRule(frozenset([frozenset(['A']), frozenset(['B'])]), True), 'expr'],
                 ],
                 'expr': [
                     ['term'],
@@ -501,7 +501,7 @@ class GenTestCase(unittest.TestCase):
         tokenize = lexer.LexicalGrammar('a b')
         rules = {
             'goal': [
-                [LookaheadRule(frozenset({'a'}), False), 'abs'],
+                [LookaheadRule(frozenset([frozenset(['a'])]), False), 'abs'],
             ],
             'abs': [
                 ['a'],
@@ -533,7 +533,7 @@ class GenTestCase(unittest.TestCase):
                 ['stmts', 'stmt'],
             ],
             'stmt': [
-                [LookaheadRule(set=frozenset({'function'}), positive=False),
+                [LookaheadRule(set=frozenset([frozenset(['function'])]), positive=False),
                  'expr', ';'],
                 ['fndecl'],
             ],
@@ -592,7 +592,7 @@ class GenTestCase(unittest.TestCase):
             'stmt': [
                 ['OTHER', ';'],
                 ['IF', '(', 'X', ')', 'stmt',
-                 LookaheadRule(frozenset({'ELSE'}), False)],
+                 LookaheadRule(frozenset([frozenset(['ELSE'])]), False)],
                 ['IF', '(', 'X', ')', 'stmt', 'ELSE', 'stmt'],
             ],
         })
@@ -627,7 +627,7 @@ class GenTestCase(unittest.TestCase):
             Grammar({
                 'decl': [
                     [
-                        LookaheadRule(frozenset({'IDENT'}), True),
+                        LookaheadRule(frozenset([frozenset(['IDENT'])]), True),
                         Optional('attrs'),
                         'pat', '=', 'NUM'
                     ],
@@ -664,7 +664,7 @@ class GenTestCase(unittest.TestCase):
                 ['ForStmt'],
             ],
             'ForStmt': [
-                ["for", "(", LookaheadRule(frozenset({"let"}), False),
+                ["for", "(", LookaheadRule(frozenset([frozenset(["let"])]), False),
                  "Expr", ";", ";", ")", "Stmt"],
             ],
             'Expr': [
@@ -685,7 +685,7 @@ class GenTestCase(unittest.TestCase):
                 ['Statement', 'Statement'],
             ],
             'Statement': [
-                [LookaheadRule(frozenset({'function'}), False), 'Expression', ';'],
+                [LookaheadRule(frozenset([frozenset(['function'])]), False), 'Expression', ';'],
                 ['Function'],
             ],
             'Function': [
@@ -925,7 +925,7 @@ class GenTestCase(unittest.TestCase):
                 ["async", "Identifier", "=>", "AsyncConciseBody"],
             ],
             "AsyncConciseBody": [
-                [LookaheadRule(set=frozenset(["{"]), positive=False),
+                [LookaheadRule(set=frozenset([frozenset(["{"])]), positive=False),
                  "Expression"],
                 ["{", "}"],
             ],

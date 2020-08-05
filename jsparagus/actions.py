@@ -337,10 +337,10 @@ class Lookahead(Action):
     sequences of terminal/non-terminals sequences."""
     __slots__ = ['terms', 'accept']
 
-    terms: typing.FrozenSet[str]
+    terms: OrderedFrozenSet[OrderedFrozenSet[str]]
     accept: bool
 
-    def __init__(self, terms: typing.FrozenSet[str], accept: bool):
+    def __init__(self, terms: OrderedFrozenSet[OrderedFrozenSet[str]], accept: bool):
         super().__init__()
         self.terms = terms
         self.accept = accept
@@ -366,11 +366,26 @@ class Lookahead(Action):
     def __str__(self) -> str:
         return "Lookahead({}, {})".format(self.terms, self.accept)
 
+    def first_token_set(self) -> OrderedFrozenSet[str]:
+        return OrderedFrozenSet([list(seq)[0] for seq in self.terms])
+
+    def following_tokens_list(self, first: Element) -> OrderedFrozenSet[OrderedFrozenSet[str]]:
+        following = []
+        for seq in self.terms:
+            if list(seq)[0] == first:
+                if len(seq) > 1:
+                    following.append(OrderedFrozenSet(list(seq)[1:]))
+        return OrderedFrozenSet(following)
+
     def shifted_action(self, shifted_term: Element) -> ShiftedAction:
         if isinstance(shifted_term, Nt):
             return True
-        if shifted_term in self.terms:
-            return self.accept
+        if shifted_term in self.first_token_set():
+            following = self.following_tokens_list(shifted_term)
+            if len(following) == 0:
+                return self.accept
+            print("@@@@", shifted_term, following)
+            return Lookahead(following, self.accept)
         return not self.accept
 
 

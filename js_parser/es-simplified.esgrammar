@@ -842,7 +842,7 @@ EmptyStatement :
 
 @returns Statement
 ExpressionStatement[Yield, Await] :
-  [lookahead <! {`{`, `function`, `async`, `class`, `let`}] Expression[+In, ?Yield, ?Await] `;`
+  [lookahead <! {`{`, `function`, `async`, `class`, `let` `[`}] Expression[+In, ?Yield, ?Await] `;`
     => expression_statement($0)
 
 
